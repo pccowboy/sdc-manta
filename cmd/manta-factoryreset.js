@@ -254,7 +254,7 @@ async.waterfall([
 	},
 
 	function getProbeGroups(cb) {
-		var amon = self.AMON;
+		var amon = self.Amon;
 		var log = self.log;
 
 		log.info('fetching probe groups from amon');
@@ -375,7 +375,7 @@ async.waterfall([
 	},
 
 	function _deleteProbeGroups(cb) {
-		var amon = self.AMON;
+		var amon = self.Amon;
 		var log = self.log;
 
 		if (!self.probeGroups)
