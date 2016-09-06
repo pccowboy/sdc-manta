@@ -270,6 +270,23 @@ async.waterfall([
 		});
 	},
 
+	function getProbes(cb) {
+		var amon = self.AMON;
+		var log = self.log;
+
+		log.info('fetching probes from amon');
+
+		amon.listProbes(POSEIDON.uuid, function (err, res) {
+			if (err) {
+				log.error(err, 'failed to get amon probes');
+				return (cb(err));
+			}
+
+			self.probes = res;
+			return (cb(null));
+		});
+	},
+
 	function _undeployMarlinAgents(cb) {
 		if (!self.application) {
 			return (cb(null));
@@ -399,6 +416,40 @@ async.waterfall([
 						'delete probe group %s', uuid);
 				} else {
 					log.info('deleted probe group %s', uuid);
+				}
+
+				subcb(err);
+			});
+		}, function (err) {
+			cb(err);
+		});
+	},
+
+	function _deleteProbes(cb) {
+		var amon = self.AMON;
+		var log = self.log;
+
+		if (!self.probes)
+			return (cb(null));
+
+		var uuids = [];
+		self.probes.forEach(function (elem, idx, ary) {
+			uuids = uuids.concat(elem.uuid);
+		});
+
+		/*
+		 * Delete 8 probes at a time since that's what
+		 * the code I copied does.
+		 */
+		async.forEachLimit(uuids, 8, function (uuid, subcb) {
+			log.info('deleting probe %s', uuid);
+
+			amon.deleteProbe(POSEIDON.uuid, uuid, function (err) {
+				if (err) {
+					log.error(err, 'failed to ' +
+						'delete probe %s', uuid);
+				} else {
+					log.info('deleted probe %s', uuid);
 				}
 
 				subcb(err);
